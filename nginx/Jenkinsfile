@@ -1,0 +1,104 @@
+pipeline {
+    agent any
+    environment {
+        REGISTRY = 'docker.io'
+        IMAGE_NAME = 'nginx-test'
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+    }
+    stages {
+        stage('Clone Repository') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // 获取 Docker 凭证并构建
+                    withCredentials([usernamePassword(
+                        credentialsId: 'cbc0d5e2-33f3-4ef9-8fff-05432f02dfaa',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        dockerImage = docker.build("${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}")
+                    }
+                }
+            }
+        }
+        
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    // 使用 Docker 凭证推送镜像
+                    withCredentials([usernamePassword(
+                        credentialsId: 'cbc0d5e2-33f3-4ef9-8fff-05432f02dfaa',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        docker.withRegistry("https://${REGISTRY}") {
+                            dockerImage.push()
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Update Deployment Config') {
+            steps {
+                script {
+                    // 安全克隆配置仓库
+                    dir('config-repo') {
+                        // 使用 Jenkins Git 插件安全克隆（无需暴露凭证）
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: '*/main']],
+                            extensions: [],
+                            userRemoteConfigs: [[
+                                url: 'https://github.com/freewenxiao/yexiangfeng.git',
+                                credentialsId: 'cbc0d5e2-33f3-4ef9-8fff-05432f02dfaa'  // 使用凭证ID
+                            ]]
+                        ])
+                        
+                        // 更新配置文件
+                        sh "sed -i 's|image:.*|image: ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}|' deployment.yaml"
+                        
+                        // 设置 Git 身份
+                        sh 'git config user.email "jenkins@example.com"'
+                        sh 'git config user.name "Jenkins CI"'
+                        
+                        // 提交更改
+                        sh 'git add deployment.yaml'
+                        sh 'git commit -m "Update image tag to ${IMAGE_TAG}"'
+                        
+                        // 安全推送（使用临时凭证存储）
+                        withCredentials([usernamePassword(
+                            credentialsId: 'b03f9ac5-8f56-439b-a32a-6837b400ade5',
+                            usernameVariable: 'GIT_USER',
+                            passwordVariable: 'GIT_PASS'
+                        )]) {
+                            sh '''
+                                # 设置临时凭证存储
+                                git config credential.helper 'store --file=.git-credentials'
+                                echo "https://${GIT_USER}:${GIT_PASS}@github.com" > .git-credentials
+                                
+                                # 执行推送（凭证不会出现在日志中）
+                                git push origin main
+                                
+                                # 清理凭证文件
+                                rm -f .git-credentials
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            // 清理工作空间
+            cleanWs()
+        }
+    }
+}
