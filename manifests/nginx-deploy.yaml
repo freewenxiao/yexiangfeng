@@ -14,23 +14,12 @@ spec:
         app: nginx
     spec:
       containers:
-      #- name: busybox
-      #  image: busybox
-      #  command:
-      #    - sleep
-      #    - "3601"
+
       - name: nginx
-        image: nginx:1.30.3
+        image: docker.xuanyuan.me/nginx:latest
         ports:
         - containerPort: 80
-     #   volumeMounts:
-     #     - name: volume
-     #       mountPath: /var/log/nginx
-     # volumes:
-     #   - name: volume
-     #     persistentVolumeClaim:
-     #       claimName: pvc2
-     #       readOnly: false
+
 ---
 apiVersion: v1
 kind: Service
