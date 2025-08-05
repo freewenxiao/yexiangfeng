@@ -20,7 +20,7 @@ spec:
       #    - sleep
       #    - "3601"
       - name: nginx
-        image: nginx:latest
+        image: nginx:1.30.3
         ports:
         - containerPort: 80
      #   volumeMounts:
