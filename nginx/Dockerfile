@@ -1,2 +1,2 @@
-FROM nginx:1.25-alpine
+FROM freewenxiao/nginx:last
 COPY html /usr/share/nginx/html
