@@ -18,7 +18,15 @@ spec:
         cpu: "500m"
   - name: docker
     image: docker:latest
-    command: ["mkdir /etc/docker/; echo '{}' /etc/docker/daemon.json"]
+    command: 
+     - sh
+     - -c
+     - |
+       mkdir -p /tmp/docker-config
+       echo '{}' > /tmp/docker-config/daemon.json
+       dockerd \\
+         --host=tcp://0.0.0.0:2375 \\
+         --config-file=/tmp/docker-config/daemon.json
     tty: true
     securityContext:
       privileged: true
