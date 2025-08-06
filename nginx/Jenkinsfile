@@ -18,7 +18,7 @@ spec:
         cpu: "500m"
   - name: docker
     image: docker:latest
-    command: ["sed -i '/registry-mirrors/d' /etc/docker/daemon.json"]
+    command: ["echo '{}' /etc/docker/daemon.json"]
     tty: true
     securityContext:
       privileged: true
