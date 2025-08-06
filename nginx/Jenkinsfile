@@ -19,14 +19,10 @@ spec:
   - name: docker
     image: docker:latest
     command: 
-     - sh
-     - -c
-     - |
-       mkdir -p /tmp/docker-config
-       echo '{}' > /tmp/docker-config/daemon.json
-       dockerd \\
-         --host=tcp://0.0.0.0:2375 \\
-         --config-file=/tmp/docker-config/daemon.json
+      - sh
+      - -c
+      - |
+        dockerd --host=tcp://0.0.0.0:2375 --registry-mirror=
     tty: true
     securityContext:
       privileged: true
