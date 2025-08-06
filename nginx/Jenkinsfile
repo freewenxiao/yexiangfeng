@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         REGISTRY = 'docker.io'
-        IMAGE_NAME = 'nginx-test'
+        IMAGE_NAME = 'freewenxiao/nginx-test'
         IMAGE_TAG = "${env.BUILD_NUMBER}"
     }
     stages {
