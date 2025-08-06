@@ -68,7 +68,7 @@ spec:
                             
                             // 构建并推送镜像
                             def fullImage = "${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
-                            sh "docker build -f ./nginx/Dockerfile -t ${fullImage} ."
+                            sh "docker build --registry-mirror https://docker.io -f ./nginx/Dockerfile -t ${fullImage} ."
                             sh "docker push ${fullImage}"
                         }
                     }
