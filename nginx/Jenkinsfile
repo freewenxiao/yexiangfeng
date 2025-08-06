@@ -63,23 +63,11 @@ spec:
                                 passwordVariable: 'DOCKER_PASS'
                             )
                         ]) {
-                            sh '''                            
-                                mkdir -p /etc/docker
-                                cat <<EOF > /etc/docker/daemon.json
-                                {
-                                  "registry-mirrors": ["docker.io"]
-                                }
-                                EOF
-                                
-                                # 重新加载 dockerd 配置
-                                pkill -SIGHUP dockerd
-                                sleep 3 
-                            '''
                             // 登录 Docker Hub
                             sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${REGISTRY}"
                             
                             // 构建并推送镜像
-                            def fullImage = "${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
+                            def fullImage = "https://${REGISTRY}/${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
                             sh "docker build -f ./nginx/Dockerfile -t ${fullImage} ."
                             sh "docker push ${fullImage}"
                         }
