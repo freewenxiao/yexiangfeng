@@ -18,7 +18,7 @@ spec:
         cpu: "500m"
   - name: docker
     image: docker:latest
-    command: ["echo '{}' /etc/docker/daemon.json"]
+    command: ["mkdir /etc/docker/; echo '{}' /etc/docker/daemon.json"]
     tty: true
     securityContext:
       privileged: true
