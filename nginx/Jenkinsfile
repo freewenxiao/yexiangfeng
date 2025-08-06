@@ -2,50 +2,31 @@ pipeline {
     agent {
         kubernetes {
             label 'docker-agent'
-            // 增加 Pod 启动超时时间（默认5分钟，这里设为10分钟）
-            instanceCap 5
-            idleMinutes 10
-            // 增加 Pod 启动重试
-            retries 2
-            
             yaml """
 apiVersion: v1
 kind: Pod
-metadata:
-  # 添加状态注解，帮助 Jenkins 检测状态
-  annotations:
-    jenkins.io/pod-status: ''
 spec:
   containers:
   - name: jnlp
     image: jenkins/inbound-agent:latest-jdk11
     resources:
       requests:
-        memory: "512Mi"  # 增加内存请求
-        cpu: "200m"      # 增加 CPU 请求
+        memory: "256Mi"
+        cpu: "100m"
       limits:
-        memory: "1Gi"
-        cpu: "800m"
-    # 添加就绪探针
-    readinessProbe:
-      exec:
-        command: ["ls", "/var/jenkins/agent"]
-      initialDelaySeconds: 5
-      periodSeconds: 5
+        memory: "512Mi"
+        cpu: "500m"
   - name: docker
-    image: docker:20.10-dind  # 使用 dind 镜像
-    command: ["dockerd", "--host=tcp://0.0.0.0:2375"]
+    image: docker:latest
+    command: ["cat"]
+    tty: true
     securityContext:
       privileged: true
-    env:
-      - name: DOCKER_TLS_CERTDIR
-        value: ""
-    # 添加就绪探针
-    readinessProbe:
-      exec:
-        command: ["docker", "version"]
-      initialDelaySeconds: 10
-      periodSeconds: 5
+    volumeMounts:
+      - name: docker-sock
+        mountPath: /var/run/docker.sock
+      - name: docker-bin
+        mountPath: /usr/bin/docker
   volumes:
   - name: docker-sock
     hostPath:
@@ -75,11 +56,6 @@ spec:
             steps {
                 container('docker') {
                     script {
-                        // 检查 Docker 是否真正可用
-                        retry(3) {
-                            sh 'docker version || (sleep 10; false)'
-                        }
-                        
                         withCredentials([
                             usernamePassword(
                                 credentialsId: 'cbc0d5e2-33f3-4ef9-8fff-05432f02dfaa',
@@ -156,12 +132,12 @@ spec:
             }
         }
         
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        
         failure {
-            script {
-                // 获取 Pod 状态用于调试
-                sh 'kubectl get pods -o wide || true'
-                sh 'kubectl describe pods | grep -A 20 Events || true'
-            }
+            echo 'Pipeline failed! Check logs for details.'
         }
     }
 }
