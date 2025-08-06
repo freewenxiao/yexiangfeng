@@ -16,6 +16,6 @@ spec:
       containers:
 
       - name: nginx
-        image: freewenxiao/nginx:latest
+        image: freewenxiao/nginx-test:latest
         ports:
         - containerPort: 80
