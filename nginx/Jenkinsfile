@@ -63,6 +63,11 @@ spec:
                                 passwordVariable: 'DOCKER_PASS'
                             )
                         ]) {
+                            sh """
+                                rm -f /etc/docker/daemon.json
+                                pkill -SIGHUP dockerd
+                                sleep 3
+                            '''
                             // 登录 Docker Hub
                             sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${REGISTRY}"
                             
