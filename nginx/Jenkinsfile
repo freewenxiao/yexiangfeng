@@ -63,7 +63,7 @@ spec:
                                 passwordVariable: 'DOCKER_PASS'
                             )
                         ]) {
-                            sh """
+                            sh '''
                                 rm -f /etc/docker/daemon.json
                                 pkill -SIGHUP dockerd
                                 sleep 3
