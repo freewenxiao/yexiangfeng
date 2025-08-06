@@ -1,10 +1,12 @@
 pipeline {
     agent any
+    
     environment {
         REGISTRY = 'docker.io'
-        IMAGE_NAME = 'nginx-test'  
+        IMAGE_NAME = 'nginx-test'
         IMAGE_TAG = "${env.BUILD_NUMBER}"
     }
+    
     stages {
         stage('Clone Repository') {
             steps {
@@ -15,12 +17,19 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    // 确保 Docker 可用
+                    sh 'which docker || echo "Docker not found"'
+                    sh 'docker --version || true'
+                    
                     withCredentials([usernamePassword(
                         credentialsId: 'cbc0d5e2-33f3-4ef9-8fff-05432f02dfaa',
                         usernameVariable: 'DOCKER_USER',
                         passwordVariable: 'DOCKER_PASS'
                     )]) {
+                        // 使用完整的镜像名称
                         def fullImageName = "${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
+                        
+                        // 使用 docker.build 方法
                         dockerImage = docker.build(fullImageName)
                     }
                 }
@@ -37,16 +46,15 @@ pipeline {
                     )]) {
                         def fullImageName = "${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
                         
+                        // 使用明确的 Docker 命令路径
                         sh """
-                            docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${REGISTRY}
+                            /usr/bin/docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${REGISTRY}
+                            /usr/bin/docker push ${fullImageName}
                         """
                         
+                        // 使用 docker.withRegistry 方法
                         docker.withRegistry("https://${REGISTRY}", "credentials-id:cbc0d5e2-33f3-4ef9-8fff-05432f02dfaa") {
-
-                            sh "docker push ${fullImageName}"
-                            
-                            sh "docker tag ${fullImageName} ${DOCKER_USER}/${IMAGE_NAME}:latest"
-                            sh "docker push ${DOCKER_USER}/${IMAGE_NAME}:latest"
+                            dockerImage.push()
                         }
                     }
                 }
@@ -57,11 +65,9 @@ pipeline {
             steps {
                 script {
                     dir('config-repo') {
-
                         checkout([
                             $class: 'GitSCM',
                             branches: [[name: '*/main']],
-                            extensions: [[$class: 'CleanBeforeCheckout']],
                             userRemoteConfigs: [[
                                 url: 'https://github.com/freewenxiao/yexiangfeng.git',
                                 credentialsId: 'b03f9ac5-8f56-439b-a32a-6837b400ade5'
@@ -73,20 +79,16 @@ pipeline {
                             usernameVariable: 'DOCKER_USER',
                             passwordVariable: 'DOCKER_PASS'
                         )]) {
-
                             def fullImageName = "${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
                             sh "sed -i 's|image:.*|image: ${fullImageName}|' deployment.yaml"
                         }
                         
-
                         sh 'git config user.email "jenkins@example.com"'
                         sh 'git config user.name "Jenkins CI"'
-                        
-
                         sh 'git add deployment.yaml'
                         sh "git commit -m 'Update image tag to ${IMAGE_TAG}'"
                         
-
+                        // 安全推送
                         sshagent(['b03f9ac5-8f56-439b-a32a-6837b400ade5']) {
                             sh 'git push origin main'
                         }
@@ -98,11 +100,19 @@ pipeline {
     
     post {
         always {
-            sh '''
-                docker logout ${REGISTRY} || true
-                rm -f ${HOME}/.docker/config.json || true
-            '''
-            cleanWs()
+            script {
+                // 安全登出 Docker
+                sh '''
+                    if command -v docker &> /dev/null; then
+                        docker logout ${REGISTRY} || true
+                    else
+                        echo "Docker command not found, skipping logout"
+                    fi
+                '''
+                
+                // 使用 deleteDir 替代 cleanWs
+                deleteDir()
+            }
         }
     }
 }
