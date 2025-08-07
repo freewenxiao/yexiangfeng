@@ -1,6 +1,6 @@
 pipeline {
-     agent any           
-  
+    agent any           
+
     environment {
         REGISTRY = 'docker.io'
         IMAGE_NAME = 'freewenxiao/nginx-test'
@@ -10,6 +10,25 @@ pipeline {
     }
     
     stages {
+        stage('Fix Docker Permissions') {
+            steps {
+                script {
+                    // 修复权限问题
+                    sh '''
+                        echo "=== 修复 Docker 权限问题 ==="
+                        sudo groupadd docker || true
+                        sudo usermod -aG docker jenkins || true
+                        sudo chmod 666 /var/run/docker.sock || true
+                        sudo systemctl restart docker || true
+                        
+                        # 验证权限
+                        groups
+                        ls -l /var/run/docker.sock
+                    '''
+                }
+            }
+        }
+        
         stage('Setup Docker') {
             steps {
                 script {
@@ -27,6 +46,7 @@ pipeline {
                 }
             }
         }
+        
         stage('Clone Repository') {
             steps {
                 checkout scm
@@ -36,10 +56,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh """
-                        docker --version
-                    """
-                    dockerImage = docker.build(FULL_IMAGE, "-f ./nginx/Dockerfile .")
+                    // 使用正确的 Dockerfile 路径和构建上下文
+                    sh "docker build -t ${FULL_IMAGE} -f ./nginx/Dockerfile ."
                 }
             }
         }
@@ -49,7 +67,7 @@ pipeline {
                 script {
                     // 关键修复：使用正确的注册表 URL
                     docker.withRegistry("https://${REGISTRY}", 'cbc0d5e2-33f3-4ef9-8fff-05432f02dfaa') {
-                        dockerImage.push()
+                        sh "docker push ${FULL_IMAGE}"
                     }
                 }
             }
@@ -66,12 +84,13 @@ pipeline {
                             passwordVariable: 'GIT_PASSWORD'
                         )
                     ]) {
+                        // 克隆仓库到子目录
+                        sh """
+                            rm -rf yexiangfeng
+                            git clone https://${GIT_USER}:${GIT_PASSWORD}@${GIT_REPO.split('://')[1]} yexiangfeng
+                        """
+                        
                         dir('yexiangfeng') {
-                            // 克隆仓库
-                            sh """
-                                git clone https://${GIT_USER}:${GIT_PASSWORD}@${GIT_REPO.split('://')[1]} .
-                            """
-                            
                             // 更新部署文件
                             sh "sed -i 's|image:.*|image: ${FULL_IMAGE}|' deployment.yaml"
                             
@@ -89,5 +108,11 @@ pipeline {
             }
         }
     }
-}
     
+    post {
+        always {
+            // 清理工作空间
+            cleanWs()
+        }
+    }
+}
