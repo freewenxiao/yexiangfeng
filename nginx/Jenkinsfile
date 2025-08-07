@@ -8,7 +8,7 @@ pipeline {
         FULL_IMAGE = "${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
         GIT_REPO = 'https://github.com/freewenxiao/yexiangfeng.git'
     }
-    
+     stages {
         stage('Clone Repository') {
             steps {
                 checkout scm
@@ -69,5 +69,6 @@ pipeline {
                 }
             }
         }
+     }
     }
     
