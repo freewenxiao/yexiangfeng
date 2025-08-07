@@ -16,10 +16,10 @@ pipeline {
                     // 修复权限问题
                     sh '''
                         echo "=== 修复 Docker 权限问题 ==="
-                        sudo groupadd docker || true
-                        sudo usermod -aG docker jenkins || true
-                        sudo chmod 666 /var/run/docker.sock || true
-                        sudo systemctl restart docker || true
+                        groupadd docker || true
+                        usermod -aG docker jenkins || true
+                        chmod 666 /var/run/docker.sock || true
+                        systemctl restart docker || true
                         
                         # 验证权限
                         groups
