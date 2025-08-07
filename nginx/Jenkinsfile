@@ -9,25 +9,6 @@ pipeline {
         GIT_REPO = 'https://github.com/freewenxiao/yexiangfeng.git'
     }
     
-    stages {   
-        stage('Setup Docker') {
-            steps {
-                script {
-                    // 获取 Docker 工具路径
-                    def dockerPath = tool name: 'docker', type: 'org.jenkinsci.plugins.docker.commons.tools.DockerTool'
-                    
-                    // 添加到 PATH
-                    env.PATH = "${dockerPath}/bin:${env.PATH}"
-                    
-                    // 验证安装
-                    sh """
-                        echo "Docker installed at: ${dockerPath}"
-                        docker --version
-                    """
-                }
-            }
-        }
-        
         stage('Clone Repository') {
             steps {
                 checkout scm
