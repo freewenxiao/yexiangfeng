@@ -1,42 +1,93 @@
-
 pipeline {
     agent any
+    
     environment {
         REGISTRY = 'docker.io'
         IMAGE_NAME = 'freewenxiao/nginx-test'
         IMAGE_TAG = "${env.BUILD_NUMBER}"
+        FULL_IMAGE = "${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+        GIT_REPO = 'https://github.com/freewenxiao/yexiangfeng.git'
     }
+    
     stages {
+        stage('Setup Docker') {
+            steps {
+                script {
+                    // 关键修复：安装并配置 Docker CLI
+                    def dockerTool = tool name: 'docker', type: 'org.jenkinsci.plugins.docker.workflow.DockerTool'
+                    env.PATH = "${dockerTool}/bin:${env.PATH}"
+                    
+                    // 验证 Docker 安装
+                    sh 'docker --version'
+                }
+            }
+        }
+        
         stage('Clone Repository') {
             steps {
                 checkout scm
             }
         }
+        
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}")
+                    // 使用 Docker Pipeline 插件构建
+                    dockerImage = docker.build(FULL_IMAGE)
                 }
             }
         }
+        
         stage('Push Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('https://docker.io/freewenxiao/nginx-test', 'cbc0d5e2-33f3-4ef9-8fff-05432f02dfaa') {
+                    // 关键修复：使用正确的注册表 URL
+                    docker.withRegistry("https://${REGISTRY}", 'cbc0d5e2-33f3-4ef9-8fff-05432f02dfaa') {
                         dockerImage.push()
                     }
                 }
             }
         }
+        
         stage('Update Deployment Config') {
             steps {
-                sh 'git clone https://github.com/freewenxiao/yexiangfeng.git'
-                dir('your-git-repo') {
-                    sh "sed -i 's/tag:.*/tag: ${IMAGE_TAG}/' deployment.yaml"
-                    sh 'git commit -am "Update deployment image tag"'
-                    sh 'git push'
+                script {
+                    // 安全地处理 Git 操作
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'b03f9ac5-8f56-439b-a32a-6837b400ade5',
+                            usernameVariable: 'GIT_USER',
+                            passwordVariable: 'GIT_PASSWORD'
+                        )
+                    ]) {
+                        dir('yexiangfeng') {
+                            // 克隆仓库
+                            sh """
+                                git clone https://${GIT_USER}:${GIT_PASSWORD}@${GIT_REPO.split('://')[1]} .
+                            """
+                            
+                            // 更新部署文件
+                            sh "sed -i 's|image:.*|image: ${FULL_IMAGE}|' deployment.yaml"
+                            
+                            // 提交更改
+                            sh """
+                                git config user.email "jenkins@example.com"
+                                git config user.name "Jenkins"
+                                git add deployment.yaml
+                                git commit -m 'Update image to ${IMAGE_TAG}'
+                                git push
+                            """
+                        }
+                    }
                 }
             }
+        }
+    }
+    
+    post {
+        always {
+            // 清理 Docker 登录凭证
+            sh 'docker logout || true'
         }
     }
 }
