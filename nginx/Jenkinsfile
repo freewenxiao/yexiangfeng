@@ -1,6 +1,6 @@
 pipeline {
     agent any
-    stage('Verify Docker') {
+    stages('Verify Docker') {
     steps {
         script {
             // 1. 检查工具是否可用
