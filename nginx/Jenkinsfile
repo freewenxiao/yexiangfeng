@@ -10,19 +10,6 @@ pipeline {
     }
     
     stages {
-        stage('Setup Docker') {
-            steps {
-                script {
-                    // 关键修复：安装并配置 Docker CLI
-                    def dockerTool = tool name: 'docker', type: 'org.jenkinsci.plugins.docker.workflow.DockerTool'
-                    env.PATH = "${dockerTool}/bin:${env.PATH}"
-                    
-                    // 验证 Docker 安装
-                    sh 'docker --version'
-                }
-            }
-        }
-        
         stage('Clone Repository') {
             steps {
                 checkout scm
