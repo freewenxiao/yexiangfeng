@@ -1,6 +1,15 @@
 pipeline {
     agent any
-
+  
+    environment {
+        REGISTRY = 'docker.io'
+        IMAGE_NAME = 'freewenxiao/nginx-test'
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        FULL_IMAGE = "${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+        GIT_REPO = 'https://github.com/freewenxiao/yexiangfeng.git'
+    }
+    
+    stages {
         stage('Setup Docker') {
             steps {
                 script {
@@ -27,15 +36,6 @@ pipeline {
             }
         }
     
-    environment {
-        REGISTRY = 'docker.io'
-        IMAGE_NAME = 'freewenxiao/nginx-test'
-        IMAGE_TAG = "${env.BUILD_NUMBER}"
-        FULL_IMAGE = "${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
-        GIT_REPO = 'https://github.com/freewenxiao/yexiangfeng.git'
-    }
-    
-    stages {
         stage('Clone Repository') {
             steps {
                 checkout scm
