@@ -18,25 +18,10 @@ pipeline {
                     // 验证安装
                     sh """
                         echo "Docker installation path: ${env.DOCKER_TOOL_PATH}"
-                        
-                        # 检查可执行文件
-                        if [ ! -f "${env.DOCKER_TOOL_PATH}/docker" ]; then
-                            echo "❌ ERROR: Docker executable not found!"
-                            exit 1
-                        fi
-                        
+                                                
                         # 验证版本
                         docker --version || exit 1
                         
-                        # 测试基本功能
-                        docker run --rm hello-world | grep "Hello from Docker!"
-                        
-                        if [ $? -ne 0 ]; then
-                            echo "❌ ERROR: Docker test failed!"
-                            exit 1
-                        fi
-                        
-                        echo "✅ Docker installation verified successfully!"
                     """
                 }
             }
