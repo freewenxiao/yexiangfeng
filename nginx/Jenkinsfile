@@ -9,26 +9,7 @@ pipeline {
         GIT_REPO = 'https://github.com/freewenxiao/yexiangfeng.git'
     }
     
-    stages {
-        stage('Fix Docker Permissions') {
-            steps {
-                script {
-                    // 修复权限问题
-                    sh '''
-                        echo "=== 修复 Docker 权限问题 ==="
-                        groupadd docker || true
-                        usermod -aG docker jenkins || true
-                        chmod 666 /var/run/docker.sock || true
-                        systemctl restart docker || true
-                        
-                        # 验证权限
-                        groups
-                        ls -l /var/run/docker.sock
-                    '''
-                }
-            }
-        }
-        
+    stages {   
         stage('Setup Docker') {
             steps {
                 script {
