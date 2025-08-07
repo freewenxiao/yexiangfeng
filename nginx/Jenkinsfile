@@ -1,0 +1,42 @@
+
+pipeline {
+    agent any
+    environment {
+        REGISTRY = 'docker.io'
+        IMAGE_NAME = 'freewenxiao/nginx-test'
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+    }
+    stages {
+        stage('Clone Repository') {
+            steps {
+                checkout scm
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dockerImage = docker.build("${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}")
+                }
+            }
+        }
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry('https://docker.io/freewenxiao/nginx-test', 'cbc0d5e2-33f3-4ef9-8fff-05432f02dfaa') {
+                        dockerImage.push()
+                    }
+                }
+            }
+        }
+        stage('Update Deployment Config') {
+            steps {
+                sh 'git clone https://github.com/freewenxiao/yexiangfeng.git'
+                dir('your-git-repo') {
+                    sh "sed -i 's/tag:.*/tag: ${IMAGE_TAG}/' deployment.yaml"
+                    sh 'git commit -am "Update deployment image tag"'
+                    sh 'git push'
+                }
+            }
+        }
+    }
+}
