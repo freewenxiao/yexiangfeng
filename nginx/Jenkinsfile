@@ -1,37 +1,47 @@
 pipeline {
     agent any
-    stages('Verify Docker') {
-    steps {
-        script {
-            // 1. 检查工具是否可用
-            def dockerTool = tool name: 'docker', type: 'org.jenkinsci.plugins.docker.workflow.DockerTool'
-            echo "Docker tool path: ${dockerTool}"
-            
-            // 2. 将 Docker 添加到 PATH
-            env.PATH = "${dockerTool}/bin:${env.PATH}"
-            
-            // 3. 执行验证命令
-            sh '''
-                echo "=== Docker 安装验证 ==="
-                
-                # 检查可执行文件是否存在
-                ls -l ${DOCKER_TOOL_PATH}/docker
-                
-                # 验证版本
-                docker --version
-                
-                # 检查基本功能
-                echo 'FROM alpine:latest\nRUN echo "Hello Docker!"' > Dockerfile.test
-                docker build -t test-image -f Dockerfile.test .
-                docker run --rm test-image
-                
-                # 清理临时文件
-                rm Dockerfile.test
-                docker rmi test-image
-            '''
+
+        stage('Setup Docker') {
+            steps {
+                script {
+                    def dockerPath = tool 'docker'
+                    env.PATH = "${dockerPath}/bin:${env.PATH}"
+                    
+                    // 设置环境变量供后续步骤使用
+                    env.DOCKER_TOOL_PATH = dockerPath
+                }
+            }
+        }    
+        stage('Validate Installation') {
+            steps {
+                script {
+                    // 验证安装
+                    sh """
+                        echo "Docker installation path: ${env.DOCKER_TOOL_PATH}"
+                        
+                        # 检查可执行文件
+                        if [ ! -f "${env.DOCKER_TOOL_PATH}/docker" ]; then
+                            echo "❌ ERROR: Docker executable not found!"
+                            exit 1
+                        fi
+                        
+                        # 验证版本
+                        docker --version || exit 1
+                        
+                        # 测试基本功能
+                        docker run --rm hello-world | grep "Hello from Docker!"
+                        
+                        if [ $? -ne 0 ]; then
+                            echo "❌ ERROR: Docker test failed!"
+                            exit 1
+                        fi
+                        
+                        echo "✅ Docker installation verified successfully!"
+                    """
+                }
+            }
         }
-    }
-}
+    
     environment {
         REGISTRY = 'docker.io'
         IMAGE_NAME = 'freewenxiao/nginx-test'
