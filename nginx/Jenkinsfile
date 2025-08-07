@@ -10,32 +10,6 @@ pipeline {
     }
     
     stages {
-        stage('Setup Docker') {
-            steps {
-                script {
-                    def dockerPath = tool 'docker'
-                    env.PATH = "${dockerPath}/bin:${env.PATH}"
-                    
-                    // 设置环境变量供后续步骤使用
-                    env.DOCKER_TOOL_PATH = dockerPath
-                }
-            }
-        }    
-        stage('Validate Installation') {
-            steps {
-                script {
-                    // 验证安装
-                    sh """
-                        echo "Docker installation path: ${env.DOCKER_TOOL_PATH}"
-                                                
-                        # 验证版本
-                        docker --version || exit 1
-                        
-                    """
-                }
-            }
-        }
-    
         stage('Clone Repository') {
             steps {
                 checkout scm
@@ -45,8 +19,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // 使用 Docker Pipeline 插件构建
-                    dockerImage = docker.build(FULL_IMAGE)
+                    dockerImage = docker.build(FULL_IMAGE, "-f ./nginx/Dockerfile")
                 }
             }
         }
