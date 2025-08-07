@@ -27,28 +27,6 @@ pipeline {
                 }
             }
         }
-        stage('Fix Docker Permissions') {
-            steps {
-                script {
-                    sh '''
-                        # 创建 docker 组（如果不存在）
-                        sudo groupadd docker || true
-                        
-                        # 将当前用户（通常是 jenkins）添加到 docker 组
-                        sudo usermod -aG docker $USER || true
-                        
-                        # 更改 docker.sock 的权限
-                        sudo chmod 666 /var/run/docker.sock || true
-                        
-                        # 重启 Docker 服务
-                        sudo systemctl restart docker || true
-                        
-                        # 验证 Docker 守护进程状态
-                        sudo systemctl status docker
-                    '''
-                }
-            }
-        }
         stage('Clone Repository') {
             steps {
                 checkout scm
