@@ -84,10 +84,5 @@ pipeline {
         }
     }
     
-    post {
-        always {
-            // 清理 Docker 登录凭证
-            sh 'docker logout || true'
-        }
     }
 }
