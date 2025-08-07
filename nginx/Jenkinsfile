@@ -1,10 +1,5 @@
 pipeline {
-     agent {
-        docker {
-            image 'docker:dind'
-            args '--privileged --storage-driver=vfs'
-        }
-    }            
+     agent any           
   
     environment {
         REGISTRY = 'docker.io'
@@ -12,7 +7,6 @@ pipeline {
         IMAGE_TAG = "${env.BUILD_NUMBER}"
         FULL_IMAGE = "${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
         GIT_REPO = 'https://github.com/freewenxiao/yexiangfeng.git'
-        DOCKER_HOST = "tcp://localhost:2375"
     }
     
     stages {
@@ -33,12 +27,6 @@ pipeline {
                 }
             }
         }
-        stage('Start Docker Daemon') {
-            steps {
-                sh 'dockerd &'
-                sleep 10  // 等待守护进程启动
-            }
-        }
         stage('Clone Repository') {
             steps {
                 checkout scm
@@ -48,6 +36,9 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    sh """
+                        docker --version
+                    """
                     dockerImage = docker.build(FULL_IMAGE, "-f ./nginx/Dockerfile .")
                 }
             }
