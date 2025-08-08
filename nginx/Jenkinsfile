@@ -87,21 +87,21 @@ spec:
                                passwordVariable: 'GIT_PASS'
                            )
                      ]) {
-                     sh """
-                        def gitRepoUrl = 'https://github.com/freewenxiao/yexiangfeng.git'
-                        def secureRepoUrl = "https://${GIT_USER}:${GIT_PASS}@github.com/freewenxiao/yexiangfeng.git"
-                        
-                        git clone -b main ${gitRepoUrl} repo
-                        cd repo
-                        def fullImage = "freewenxiao/${IMAGE_NAME}:${IMAGE_TAG}"
-                        sh "sed -i \"s/image:.*/image: \${fullImage}/g\" ./nginx/manifests/deployment.yaml"
+                           def gitRepoUrl = 'https://github.com/freewenxiao/yexiangfeng.git'
+                           def secureRepoUrl = "https://${GIT_USER}:${GIT_PASS}@github.com/freewenxiao/yexiangfeng.git"
+                           def fullImage = "freewenxiao/${IMAGE_NAME}:${IMAGE_TAG}"
+                    
+                           sh """
+                              git clone -b main ${gitRepoUrl} repo
+                              cd repo
+                              sh "sed -i \"s/image:.*/image: \${fullImage}/g\" ./nginx/manifests/deployment.yaml"
                             
-                        git status
-                        git add .
-                        git commit -m 'Update image to ${IMAGE_TAG}'
-                        git push ${secureRepoUrl} main
-                        git log -1
-                    """
+                              git status
+                              git add .
+                              git commit -m 'Update image to ${IMAGE_TAG}'
+                              git push ${secureRepoUrl} main
+                              git log -1
+                           """
                     }
                 }
             }
