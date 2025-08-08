@@ -42,7 +42,6 @@ spec:
         REGISTRY = 'docker.io'
         IMAGE_NAME = 'nginx-test'
         IMAGE_TAG = "${env.BUILD_NUMBER}"
-        DEPLOY_REPO = 'https://github.com/freewenxiao/yexiangfeng.git'
     }
     
     stages {
@@ -89,14 +88,18 @@ spec:
                            )
                      ]) {
                      sh """
-                        git clone -b main ${DEPLOY_REPO}
+                        def gitRepoUrl = 'https://github.com/freewenxiao/yexiangfeng.git'
+                        def secureRepoUrl = "https://${GIT_USER}:${GIT_PASS}@github.com/freewenxiao/yexiangfeng.git"
+                        
+                        git clone -b main ${gitRepoUrl} repo
+                        cd repo
                         def fullImage = "freewenxiao/${IMAGE_NAME}:${IMAGE_TAG}"
-                        sh "sed -i \"s/image:.*/image: ${fullImage}/g\" ./nginx/manifests/deployment.yaml"
+                        sh "sed -i \"s/image:.*/image: \${fullImage}/g\" ./nginx/manifests/deployment.yaml"
                             
                         git status
                         git add .
                         git commit -m 'Update image to ${IMAGE_TAG}'
-                        git push origin main
+                        git push ${secureRepoUrl} main
                         git log -1
                     """
                     }
