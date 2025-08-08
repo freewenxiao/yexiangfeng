@@ -94,7 +94,7 @@ spec:
                            sh """
                               git clone ${gitRepoUrl}
                               cd yexiangfeng
-                              sh "sed -i \"s/image:.*/image: ${fullImage}/g\" ./nginx/manifests/deployment.yaml"
+                              sed -i "s/image:.*/image: ${fullImage}/g" ./nginx/manifests/deployment.yaml
                             
                               git status
                               git add .
