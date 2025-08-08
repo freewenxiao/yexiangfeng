@@ -13,8 +13,9 @@ spec:
       labels:
         app: nginx
     spec:
+      imagePullSecrets:
+      - name: regcred
       containers:
-
       - name: nginx
         image: freewenxiao/nginx-test:104
         ports:
