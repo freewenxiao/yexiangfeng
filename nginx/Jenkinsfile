@@ -92,8 +92,8 @@ spec:
                            def fullImage = "freewenxiao/${IMAGE_NAME}:${IMAGE_TAG}"
                     
                            sh """
-                              git clone ${gitRepoUrl} repo
-                              cd repo
+                              git clone ${gitRepoUrl}
+                              cd yexiangfeng
                               sh "sed -i \"s/image:.*/image: ${fullImage}/g\" ./nginx/manifests/deployment.yaml"
                             
                               git status
