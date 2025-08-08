@@ -101,7 +101,7 @@ spec:
                               git status
                               git add .
                               git commit -m 'Update image to ${IMAGE_TAG}'
-                              git push ${secureRepoUrl} main
+                              git push ${secureRepoUrl} master
                               git log -1
                            """
                     }
