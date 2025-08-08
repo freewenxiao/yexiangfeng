@@ -62,13 +62,14 @@ spec:
                                 passwordVariable: 'DOCKER_PASS'
                             )
                         ]) {
-                            // 登录 Docker Hub
-                            sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${REGISTRY}"
-                            
-                            // 构建并推送镜像
                             def fullImage = "${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
-                            sh "docker build --build-arg ${REGISTRY} -f ./nginx/Dockerfile -t ${fullImage} ."
-                            sh "docker push ${fullImage}"
+
+                            sh """
+                                //docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${REGISTRY}
+                                echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
+                                docker build --build-arg ${REGISTRY} -f ./nginx/Dockerfile -t ${fullImage} .
+                                docker push ${fullImage}
+                            """
                         }
                     }
                 }
