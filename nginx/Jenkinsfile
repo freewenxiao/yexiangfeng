@@ -66,7 +66,6 @@ spec:
                             def fullLastImage = "${DOCKER_USER}/${IMAGE_NAME}:latest"
 
                             sh """
-                                // docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${REGISTRY}
                                 echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
                                 docker build --build-arg ${REGISTRY} -f ./nginx/Dockerfile -t ${fullNEWImage} -t ${fullLastImage} .
                                 docker push ${fullNEWImage}
