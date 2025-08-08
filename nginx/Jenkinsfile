@@ -79,18 +79,7 @@ spec:
         stage('Update Deployment') {
             steps {
                 script {
-                    dir('deployment-config') {
-                        // 检出部署配置仓库
-                        checkout([
-                            $class: 'GitSCM',
-                            branches: [[name: '*/main']],
-                            extensions: [[$class: 'CleanBeforeCheckout']],
-                            userRemoteConfigs: [[
-                                url: DEPLOY_REPO,
-                                credentialsId: 'b03f9ac5-8f56-439b-a32a-6837b400ade5'
-                            ]]
-                        ])
-                        
+                    dir('deployment-config') {                    
                         // 更新镜像版本
                         withCredentials([
                             usernamePassword(
@@ -103,16 +92,26 @@ spec:
                             sh "sed -i.bak 's|image:.*|image: ${fullImage}|' deployment.yaml"
                         }
                         
-                        // 提交变更
-                        sshagent(['b03f9ac5-8f56-439b-a32a-6837b400ade5']) {
-                            sh """
-                                git config user.email "jenkins@example.com"
-                                git config user.name "Jenkins"
-                                git add deployment.yaml
-                                git commit -m 'Update image to ${IMAGE_TAG}'
-                                git push origin main
-                            """
-                        }
+                        // 提交并推送变更
+                       withCredentials([
+                           usernamePassword(
+                               credentialsId: 'b03f9ac5-8f56-439b-a32a-6837b400ade5',
+                               usernameVariable: 'GIT_USER',
+                               passwordVariable: 'GIT_PASS'
+                           )
+                     ]) {
+                     sh """
+                        echo "=== 提交变更到仓库 ==="
+                        git status
+                        git add deployment.yaml
+                        git commit -m 'Update image to ${IMAGE_TAG}'
+                        
+                        echo "=== 推送变更到远程 ==="
+                        git push origin main
+                        
+                        echo "=== 验证推送是否成功 ==="
+                        git log -1
+                    """
                     }
                 }
             }
