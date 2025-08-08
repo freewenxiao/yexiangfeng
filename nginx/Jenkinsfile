@@ -80,18 +80,6 @@ spec:
             steps {
                 script {
                     dir('deployment-config') {                    
-                        // 更新镜像版本
-                        withCredentials([
-                            usernamePassword(
-                                credentialsId: 'cbc0d5e2-33f3-4ef9-8fff-05432f02dfaa',
-                                usernameVariable: 'DOCKER_USER',
-                                passwordVariable: 'DOCKER_PASS'
-                            )
-                        ]) {
-                            def fullImage = "${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
-                            sh "sed -i.bak 's|image:.*|image: ${fullImage}|' ./nginx/manifests/deployment.yaml"
-                        }
-                        
                         // 提交并推送变更
                        withCredentials([
                            usernamePassword(
@@ -101,15 +89,14 @@ spec:
                            )
                      ]) {
                      sh """
-                        echo "=== 提交变更到仓库 ==="
+                        git clone -b main --depth 1 ${repoUrl} .
+                        def fullImage = "freewenxiao/${IMAGE_NAME}:${IMAGE_TAG}"
+                        sh "sed -i.bak 's|image:.*|image: ${fullImage}|' ./nginx/manifests/deployment.yaml"
+                            
                         git status
-                        git add deployment.yaml
+                        git add .
                         git commit -m 'Update image to ${IMAGE_TAG}'
-                        
-                        echo "=== 推送变更到远程 ==="
                         git push origin main
-                        
-                        echo "=== 验证推送是否成功 ==="
                         git log -1
                     """
                     }
