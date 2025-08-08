@@ -95,7 +95,9 @@ spec:
                               git clone ${gitRepoUrl}
                               cd yexiangfeng
                               sed -i "s|image:.*|image: ${fullImage}|" ./nginx/manifests/deployment.yaml
-                            
+
+                              git config user.email "jenkins@example.com"
+                              git config user.name "Jenkins"
                               git status
                               git add .
                               git commit -m 'Update image to ${IMAGE_TAG}'
