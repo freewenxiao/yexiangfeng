@@ -62,13 +62,15 @@ spec:
                                 passwordVariable: 'DOCKER_PASS'
                             )
                         ]) {
-                            def fullImage = "${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
+                            def fullNEWImage = "${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
+                            def fullLastImage = "${DOCKER_USER}/${IMAGE_NAME}:latest"
 
                             sh """
                                 //docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${REGISTRY}
                                 echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
-                                docker build --build-arg ${REGISTRY} -f ./nginx/Dockerfile -t ${fullImage} .
-                                docker push ${fullImage}
+                                docker build --build-arg ${REGISTRY} -f ./nginx/Dockerfile -t ${fullNEWImage} -t ${fullLastImage} .
+                                docker push ${fullNEWImage}
+                                docker push ${fullLastImage}
                             """
                         }
                     }
