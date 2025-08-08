@@ -89,7 +89,7 @@ spec:
                            )
                      ]) {
                      sh """
-                        git clone -b main --depth 1 ${repoUrl} .
+                        git clone -b main --depth 1 ${DEPLOY_REPO} .
                         def fullImage = "freewenxiao/${IMAGE_NAME}:${IMAGE_TAG}"
                         sh "sed -i.bak 's|image:.*|image: ${fullImage}|' ./nginx/manifests/deployment.yaml"
                             
