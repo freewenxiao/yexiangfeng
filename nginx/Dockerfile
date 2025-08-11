@@ -1,2 +1,2 @@
-FROM freewenxiao/nginx-test:120
+FROM freewenxiao/nginx-test:121
 COPY ./nginx/html /usr/share/nginx/html
