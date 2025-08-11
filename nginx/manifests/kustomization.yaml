@@ -6,4 +6,4 @@ resources:
 
 images:
 - name: freewenxiao/nginx-test
-  newTag: freewenxiao/nginx-test:117
+  newTag: 118

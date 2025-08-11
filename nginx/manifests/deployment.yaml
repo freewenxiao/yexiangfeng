@@ -17,6 +17,6 @@ spec:
       - name: regcred
       containers:
       - name: nginx
-        image: freewenxiao/nginx-test:117
+        image: freewenxiao/nginx-test:118
         ports:
         - containerPort: 80
