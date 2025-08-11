@@ -89,12 +89,10 @@ spec:
                                passwordVariable: 'GIT_PASS'
                            )
                      ]) {
-                           def gitRepoUrl = 'https://github.com/freewenxiao/yexiangfeng.git'
-                           def secureRepoUrl = "https://${GIT_USER}:${GIT_PASS}@github.com/freewenxiao/yexiangfeng.git"
                            def fullImage = "freewenxiao/${IMAGE_NAME}:${IMAGE_TAG}"
                     
                            sh """
-                              git clone ${gitRepoUrl}
+                              git clone "https://github.com/freewenxiao/yexiangfeng.git"
                               cd yexiangfeng
                               sed -i "s|image:.*|image: ${fullImage}|" ./nginx/manifests/deployment.yaml
                               sed -i "s|newTag:.*|newTag: '${IMAGE_TAG}'|" ./nginx/manifests/kustomization.yaml
@@ -105,7 +103,7 @@ spec:
                               git status
                               git add .
                               git commit -m 'Update image to ${IMAGE_TAG}'
-                              git push ${secureRepoUrl} master
+                              git push "https://${GIT_USER}:${GIT_PASS}@github.com/freewenxiao/yexiangfeng.git" master
                               git log -1
                            """
                     }
