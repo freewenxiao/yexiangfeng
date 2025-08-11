@@ -97,7 +97,7 @@ spec:
                               git clone ${gitRepoUrl}
                               cd yexiangfeng
                               sed -i "s|image:.*|image: ${fullImage}|" ./nginx/manifests/deployment.yaml
-                              sed -i "s|newTag:.*|newTag: \"${IMAGE_TAG}\"|" ./nginx/manifests/kustomization.yaml
+                              sed -i "s|newTag:.*|newTag: '${IMAGE_TAG}'|" ./nginx/manifests/kustomization.yaml
                               sed -i "s|FROM.*|FROM ${fullImage}|" ./nginx/Dockerfile
 
                               git config user.email "jenkins@example.com"
